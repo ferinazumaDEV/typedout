@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "structllm"
+version = "0.1.0"
+description = "Reliable structured output from any LLM — schema-validated JSON with tolerant repair and error-aware retries, provider-agnostic."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Fernando", email = "ferinazuma@users.noreply.github.com" }]
+keywords = [
+    "llm",
+    "structured-output",
+    "json",
+    "pydantic",
+    "json-schema",
+    "anthropic",
+    "openai",
+    "function-calling",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2,<3",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.30"]
+openai = ["openai>=1.30"]
+dev = ["pytest>=7,<9"]
+
+[project.urls]
+Homepage = "https://github.com/ferinazuma/structllm"
+Source = "https://github.com/ferinazuma/structllm"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
