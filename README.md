@@ -192,6 +192,18 @@ The suite covers the repair scanner (fences, comments, truncation, unicode, nest
 mess), the JSON Schema validator, the retry loop, streaming, cost math, and the
 Anthropic/OpenAI payload mapping (via injected fake clients — no SDKs, no keys).
 
+## Part of the ferinazumaDEV ecosystem
+
+`structllm` is one of a set of small, focused tools by ferinazumaDEV for building reliably with LLMs — here, turning free-form model output into schema-validated, machine-readable data you can trust. Related projects:
+
+- [The GEO Handbook](https://github.com/ferinazumaDEV/generative-engine-optimization-handbook) — the open reference on getting content cited by AI answer engines (ChatGPT, Perplexity, Google AI Overviews, Gemini, Copilot).
+- [notebooklm-kb-system](https://github.com/ferinazumaDEV/notebooklm-kb-system) — a token-efficient "second brain" for AI agents: local memory, NotebookLM notebooks, and knowledge routing.
+- [politeclient](https://github.com/ferinazumaDEV/politeclient) — a polite, bulletproof HTTP client for Python: retries with backoff, per-host rate-limiting, and caching — handy for talking to LLM provider APIs.
+- [scaffld](https://github.com/ferinazumaDEV/scaffld) — scaffold fully-wired Python projects (tests, CI, pre-commit, license) from templates.
+- Hub & writing: [zentimes.es](https://zentimes.es).
+
+By [ferinazumaDEV](https://github.com/ferinazumaDEV).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
