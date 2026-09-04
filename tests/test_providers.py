@@ -14,11 +14,52 @@ from typedout.providers.openai import OpenAIProvider
 
 
 class FakeAnthropicMessages:
+    """Mirrors the keyword list of ``anthropic`` SDK 1.x ``Messages.create``.
+
+    Deliberately *no* ``**kwargs``: a keyword the real SDK does not accept (such
+    as ``temperature``, removed in 1.x) must raise ``TypeError`` here as well, so
+    the suite cannot mask that class of regression.
+    """
+
     def __init__(self, recorder):
         self._recorder = recorder
 
-    def create(self, **kwargs):
-        self._recorder.update(kwargs)
+    def create(
+        self,
+        *,
+        max_tokens,
+        messages,
+        model,
+        metadata=None,
+        stop_sequences=None,
+        stream=False,
+        system=None,
+        thinking=None,
+        tool_choice=None,
+        tools=None,
+        extra_headers=None,
+        extra_query=None,
+        extra_body=None,
+        timeout=None,
+    ):
+        self._recorder.update(
+            {
+                "max_tokens": max_tokens,
+                "messages": messages,
+                "model": model,
+                "metadata": metadata,
+                "stop_sequences": stop_sequences,
+                "stream": stream,
+                "system": system,
+                "thinking": thinking,
+                "tool_choice": tool_choice,
+                "tools": tools,
+                "extra_headers": extra_headers,
+                "extra_query": extra_query,
+                "extra_body": extra_body,
+                "timeout": timeout,
+            }
+        )
         return SimpleNamespace(
             model="claude-3-5-sonnet-20241022",
             content=[SimpleNamespace(type="text", text='{"ok": true}')],
@@ -41,6 +82,8 @@ def test_anthropic_splits_system_and_maps_usage():
     # system goes to the top-level arg, not into messages
     assert client.recorded["system"] == "be precise"
     assert client.recorded["messages"] == [{"role": "user", "content": "extract this"}]
+    # SDK 1.x has no `temperature` on messages.create; the provider must not send it.
+    assert "temperature" not in client.recorded
     assert completion.text == '{"ok": true}'
     assert completion.usage.input_tokens == 11
     assert completion.usage.output_tokens == 7

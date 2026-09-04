@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-82%20passing-brightgreen.svg)](tests/)
+[![tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg)](tests/)
 
 **Reliable structured output from OpenAI and Anthropic, with a provider interface for others.** Define a schema, get back a validated object — with tolerant JSON repair, error-aware retries, and an offline mock provider. No API key needed to try it.
 
@@ -130,18 +130,24 @@ validated object of the declared type.
 llm = TypedOut(MockProvider(script=["valid"], chunk_size=8))
 for partial in llm.stream(Person, "Ada Lovelace, 36, ada@example.com"):
     print(partial)
-print(llm.last_result)   # fully validated Person
+print(repr(llm.last_result))   # fully validated Person
 ```
 
 Real output — the object materialises field by field, even from a half-received stream:
 
 ```
+{}
 {'name': 'Ada'}
+{'name': 'Ada Lovelac'}
+{'name': 'Ada Lovelace'}
 {'name': 'Ada Lovelace', 'age': 36}
 {'name': 'Ada Lovelace', 'age': 36, 'email': 'ada'}
+{'name': 'Ada Lovelace', 'age': 36, 'email': 'ada@example'}
 {'name': 'Ada Lovelace', 'age': 36, 'email': 'ada@example.com'}
 Person(name='Ada Lovelace', age=36, email='ada@example.com')
 ```
+
+> `AnthropicProvider` and `OpenAIProvider` do not yet implement token streaming; with them `stream()` yields a single snapshot containing the full object. Override `Provider.stream()` in your own provider to get progressive snapshots.
 
 ### 5. Track tokens and cost
 
@@ -184,15 +190,16 @@ prompt ─▶ Provider.complete ─▶ repair(text) ─▶ validate(schema) ─�
 4. **Retry** — on failure the assistant's bad answer plus a precise correction ("field `age`: input should be a valid integer") are appended, and the model tries again.
 
 Every layer is independent: use `repair_json` alone, swap the provider, or drive the
-whole thing offline with `MockProvider` — which can synthesise schema-valid answers or
-deliberately produce **fenced**, **loose**, **truncated**, or **invalid** replies to
-exercise the repair and retry paths.
+whole thing offline with `MockProvider` — which can synthesise schema-valid answers
+(it honours `type`, `enum`, numeric bounds, string `minLength`/`maxLength` and the
+common `format`s; a `pattern` is not synthesised) or deliberately produce **fenced**,
+**loose**, **truncated**, or **invalid** replies to exercise the repair and retry paths.
 
 ## Testing
 
 ```bash
 pip install -e ".[dev]"
-pytest                    # 82 tests, fully offline
+pytest                    # 100 tests, fully offline
 python examples/quickstart.py
 ```
 
@@ -218,4 +225,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-*Built by Fernando ([@ferinazumaDEV](https://github.com/ferinazumaDEV)).*
+*Built by Fernando Aporta Franco ([@ferinazumaDEV](https://github.com/ferinazumaDEV)).*

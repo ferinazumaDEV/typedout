@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typedout import MockProvider, TypedOut
+import pytest
+
+from typedout import ExtractionError, MockProvider, TypedOut
 from typedout.streaming import iter_partial
 
 
@@ -51,3 +53,38 @@ def test_stream_progression_is_partial_before_complete(company_cls):
     key_counts = [len(s) for s in snapshots]
     assert key_counts[0] <= key_counts[-1]
     assert llm.last_result.name
+
+
+def test_stream_invalid_raises_extraction_error(person_cls):
+    # A schema-invalid stream must surface as a library error, like extract().
+    llm = TypedOut(MockProvider(script=["invalid"]))
+    with pytest.raises(ExtractionError) as exc:
+        list(llm.stream(person_cls, "x"))
+    assert exc.value.last_raw is not None
+    assert llm.last_result is None
+
+
+def test_stream_snapshots_only_contain_schema_keys(person_cls):
+    # Chunk boundaries inside a key name used to leak phantom keys such as
+    # {'nam': None}; every snapshot must be a subset of the schema's fields.
+    llm = TypedOut(MockProvider(script=["valid"], chunk_size=8))
+    snapshots = list(llm.stream(person_cls, "Ada Lovelace, 36, ada@example.com"))
+    assert snapshots
+    for snapshot in snapshots:
+        assert set(snapshot) <= {"name", "age", "email"}
+    assert snapshots[-1] == {"name": "Ada Lovelace", "age": 36, "email": "ada@example.com"}
+    # Dropping a phantom key must not produce two equal consecutive snapshots.
+    assert all(a != b for a, b in zip(snapshots, snapshots[1:]))
+    assert isinstance(llm.last_result, person_cls)
+
+
+def test_stream_keeps_genuine_null_fields(company_cls):
+    # A real, nullable schema field is not a phantom key.
+    text = (
+        '{"name": "Acme", "employees": 1, "hq": {"city": "London", '
+        '"country": "UK"}, "tags": [], "website": null}'
+    )
+    llm = TypedOut(MockProvider(responses=[text], chunk_size=len(text)))
+    snapshots = list(llm.stream(company_cls, "..."))
+    assert "website" in snapshots[-1] and snapshots[-1]["website"] is None
+    assert llm.last_result.website is None

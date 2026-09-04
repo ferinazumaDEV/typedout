@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+from datetime import date, datetime, time
+from uuid import UUID
 
 import pytest
+from pydantic import BaseModel, Field, HttpUrl
 
-from typedout import MockProvider, Schema
+from typedout import MockProvider, Schema, TypedOut
 from typedout.providers.base import Message
 from typedout.repair import loads_repaired
 
@@ -96,3 +99,67 @@ def test_rejects_both_responses_and_script():
 def test_rejects_unknown_behaviour():
     with pytest.raises(ValueError):
         MockProvider(script=["nonsense"])
+
+
+# -- "valid" must honour the constraints ordinary pydantic models carry ---------
+
+
+class _ExclusiveMin(BaseModel):
+    n: int = Field(gt=0)  # pydantic emits exclusiveMinimum
+
+
+class _ClampedHint(BaseModel):
+    age: int = Field(ge=40, le=50)  # the name hint (36) must be raised into range
+
+
+class _ExclusiveMax(BaseModel):
+    n: int = Field(lt=0)
+
+
+class _OpenInterval(BaseModel):
+    ratio: float = Field(gt=0, lt=1)
+
+
+class _Formats(BaseModel):
+    when: datetime
+    day: date
+    at: time
+    ident: UUID
+    homepage: HttpUrl
+
+
+class _MinLength(BaseModel):
+    s: str = Field(min_length=10)
+
+
+class _MaxLength(BaseModel):
+    name: str = Field(max_length=5)  # the name hint ("Ada Lovelace") must be cut
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        _ExclusiveMin,
+        _ClampedHint,
+        _ExclusiveMax,
+        _OpenInterval,
+        _Formats,
+        _MinLength,
+        _MaxLength,
+    ],
+)
+def test_valid_behaviour_honours_constraints(model):
+    llm = TypedOut(MockProvider(script=["valid"]), max_retries=0)
+    assert isinstance(llm.extract(model, "..."), model)
+
+
+def test_valid_behaviour_honours_string_format_in_dict_schema():
+    sch = Schema(
+        {
+            "type": "object",
+            "properties": {"contact": {"type": "string", "format": "email"}},
+            "required": ["contact"],
+        }
+    )
+    text = MockProvider(script=["valid"]).complete(_msgs(), schema=sch).text
+    assert json.loads(text) == {"contact": "ada@example.com"}

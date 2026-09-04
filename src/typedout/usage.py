@@ -11,11 +11,19 @@ defaults** — they change often. Override them at runtime with
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, replace
 from typing import Dict, Optional, Tuple
 
 # (input_price, output_price) in USD per 1,000,000 tokens. Approximate; configurable.
+# Current Claude rows: base tier (no batch/cache discounts) as listed on
+# https://platform.claude.com/docs/en/about-claude/pricing.md on 2026-09-04.
+# The claude-3-* families are retired and kept only so dated aliases still resolve.
 _PRICES: Dict[str, Tuple[float, float]] = {
+    "claude-opus-5": (5.00, 25.00),
+    "claude-sonnet-5": (2.00, 10.00),
+    "claude-sonnet-4-6": (3.00, 15.00),
+    "claude-haiku-4-5": (1.00, 5.00),
     "claude-3-5-sonnet": (3.00, 15.00),
     "claude-3-5-haiku": (0.80, 4.00),
     "claude-3-opus": (15.00, 75.00),
@@ -47,9 +55,18 @@ def price_for(model: str) -> Optional[Tuple[float, float]]:
 
 
 def cost_of(model: str, input_tokens: int, output_tokens: int) -> float:
-    """Compute the USD cost of a call, or ``0.0`` when the model price is unknown."""
+    """Compute the USD cost of a call, or ``0.0`` when the model price is unknown.
+
+    An unknown model also emits a ``UserWarning``, so a ``$0.000000`` figure is
+    never mistaken for a free call; :func:`register_price` silences it.
+    """
     price = price_for(model)
     if price is None:
+        warnings.warn(
+            f"typedout: no price registered for model {model!r}; its cost is "
+            "reported as $0. Use register_price(model, input_per_mtok, output_per_mtok).",
+            stacklevel=2,
+        )
         return 0.0
     in_rate, out_rate = price
     return (input_tokens * in_rate + output_tokens * out_rate) / 1_000_000
