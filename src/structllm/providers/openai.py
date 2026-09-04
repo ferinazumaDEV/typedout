@@ -1,6 +1,6 @@
 """OpenAI provider.
 
-The ``openai`` SDK is imported lazily — install ``structllm[openai]`` to use
+The ``openai`` SDK is imported lazily — install the ``openai`` package to use
 this. A pre-built ``client`` can be injected for testing the mapping offline.
 """
 

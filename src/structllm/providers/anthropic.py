@@ -1,7 +1,7 @@
 """Anthropic (Claude) provider.
 
 The ``anthropic`` SDK is imported lazily, so structllm has no hard dependency on
-it — install ``structllm[anthropic]`` to use this. A pre-built ``client`` can be
+it — install the ``anthropic`` package to use this. A pre-built ``client`` can be
 injected (used by the test-suite to exercise the mapping without a network call
 or an API key).
 """
