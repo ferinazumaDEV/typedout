@@ -184,9 +184,10 @@ prompt ─▶ Provider.complete ─▶ repair(text) ─▶ validate(schema) ─�
 4. **Retry** — on failure the assistant's bad answer plus a precise correction ("field `age`: input should be a valid integer") are appended, and the model tries again.
 
 Every layer is independent: use `repair_json` alone, swap the provider, or drive the
-whole thing offline with `MockProvider` — which can synthesise schema-valid answers or
-deliberately produce **fenced**, **loose**, **truncated**, or **invalid** replies to
-exercise the repair and retry paths.
+whole thing offline with `MockProvider` — which can synthesise schema-valid answers
+(it honours `type`, `enum`, numeric bounds, string `minLength`/`maxLength` and the
+common `format`s; a `pattern` is not synthesised) or deliberately produce **fenced**,
+**loose**, **truncated**, or **invalid** replies to exercise the repair and retry paths.
 
 ## Testing
 

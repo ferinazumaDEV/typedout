@@ -12,12 +12,16 @@
 
 For scripted behaviours the provider *synthesises* a realistic instance from the
 schema, then deforms it, so a ``Person`` schema yields a plausible person rather
-than lorem ipsum.
+than lorem ipsum. Synthesis honours ``type``, ``enum``/``const``/``default``,
+numeric bounds (``minimum``/``maximum`` and the exclusive variants), string
+``minLength``/``maxLength`` and the common string ``format`` values; a ``pattern``
+cannot be synthesised generically and is ignored.
 """
 
 from __future__ import annotations
 
 import json
+import math
 from typing import Any, Dict, Iterator, List, Optional
 
 from ..schema import Schema
@@ -45,6 +49,15 @@ _STRING_HINTS = {
     "url": "https://example.com",
 }
 _INT_HINTS = {"age": 36, "year": 1843, "count": 3, "quantity": 3, "priority": 1, "id": 1}
+# Strings for the JSON Schema ``format``s pydantic emits for common field types.
+_FORMAT_HINTS = {
+    "date-time": "2026-01-01T00:00:00Z",
+    "date": "2026-01-01",
+    "time": "00:00:00",
+    "email": "ada@example.com",
+    "uri": "https://example.com",
+    "uuid": "00000000-0000-4000-8000-000000000000",
+}
 
 
 class MockProvider(Provider):
@@ -189,13 +202,56 @@ def _synthesize(schema: Dict[str, Any], root: Dict[str, Any], key: str = "") -> 
     if typ == "boolean":
         return True
     if typ == "integer":
-        return _INT_HINTS.get(key.lower(), int(schema.get("minimum", 0)) or 0)
+        lo, hi = _bounds(schema, step=1)
+        lo = None if lo is None else math.ceil(lo)
+        hi = None if hi is None else math.floor(hi)
+        return _clamp(_INT_HINTS.get(key.lower(), 0), lo, hi)
     if typ == "number":
-        return float(schema.get("minimum", 0.0)) or 1.5
+        lo, hi = _bounds(schema, step=0.5)
+        return _clamp(float(schema.get("minimum", 0.0)) or 1.5, lo, hi)
     if typ == "null":
         return None
     # default: string
-    return _STRING_HINTS.get(key.lower(), "example")
+    return _synthesize_string(schema, key)
+
+
+def _synthesize_string(schema: Dict[str, Any], key: str) -> str:
+    fmt = schema.get("format")
+    if fmt in _FORMAT_HINTS:
+        value = _FORMAT_HINTS[fmt]
+    else:
+        value = _STRING_HINTS.get(key.lower(), "example")
+    min_len = schema.get("minLength")
+    if min_len is not None and len(value) < min_len:
+        value += "x" * (min_len - len(value))
+    max_len = schema.get("maxLength")
+    if max_len is not None and len(value) > max_len:
+        value = value[:max_len]
+    # ``pattern`` is deliberately not handled: a regex cannot be inverted generically.
+    return value
+
+
+def _bounds(schema: Dict[str, Any], *, step: float) -> tuple:
+    """Inclusive ``(lo, hi)`` from ``minimum``/``maximum`` and the exclusive
+    variants (pydantic emits ``exclusiveMinimum`` for ``gt`` and ``minimum`` for
+    ``ge``); *step* is how far inside an exclusive bound the value lands."""
+    lo = schema.get("minimum")
+    if "exclusiveMinimum" in schema:
+        inner = schema["exclusiveMinimum"] + step
+        lo = inner if lo is None else max(lo, inner)
+    hi = schema.get("maximum")
+    if "exclusiveMaximum" in schema:
+        inner = schema["exclusiveMaximum"] - step
+        hi = inner if hi is None else min(hi, inner)
+    return lo, hi
+
+
+def _clamp(value: Any, lo: Any, hi: Any) -> Any:
+    if lo is not None and value < lo:
+        value = lo
+    if hi is not None and value > hi:
+        value = hi
+    return value
 
 
 def _corrupt(sample: Any, schema: Dict[str, Any]) -> Any:
