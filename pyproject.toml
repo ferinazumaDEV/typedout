@@ -45,6 +45,9 @@ Source = "https://github.com/ferinazumaDEV/typedout"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+typedout = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
