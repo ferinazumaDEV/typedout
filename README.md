@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-82%20passing-brightgreen.svg)](tests/)
 
-**Reliable structured output from any LLM.** Define a schema, get back a validated object — with tolerant JSON repair, error-aware retries, and a provider-agnostic interface. No API key needed to try it.
+**Reliable structured output from OpenAI and Anthropic, with a provider interface for others.** Define a schema, get back a validated object — with tolerant JSON repair, error-aware retries, and an offline mock provider. No API key needed to try it.
 
 ```python
 from pydantic import BaseModel
@@ -39,10 +39,14 @@ mid-object at the token limit. `structllm` handles all of that behind one small 
 
 ## Install
 
+The distribution name `structllm` is already taken on PyPI by an unrelated
+project, so this package is not published there. Install it from this
+repository:
+
 ```bash
-pip install structllm                 # core (pydantic only)
-pip install "structllm[anthropic]"    # + Anthropic SDK
-pip install "structllm[openai]"       # + OpenAI SDK
+pip install git+https://github.com/ferinazumaDEV/structllm.git                             # core (pydantic only)
+pip install "structllm[anthropic] @ git+https://github.com/ferinazumaDEV/structllm.git"    # + Anthropic SDK
+pip install "structllm[openai] @ git+https://github.com/ferinazumaDEV/structllm.git"       # + OpenAI SDK
 ```
 
 Requires Python 3.9+. The only hard dependency is `pydantic>=2`.

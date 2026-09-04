@@ -37,7 +37,7 @@ class AnthropicProvider(Provider):
             except ImportError as exc:  # pragma: no cover - depends on env
                 raise ImportError(
                     "AnthropicProvider needs the 'anthropic' package "
-                    "(pip install structllm[anthropic])"
+                    "(pip install anthropic)"
                 ) from exc
             self._client = anthropic.Anthropic(api_key=self._api_key)
         return self._client

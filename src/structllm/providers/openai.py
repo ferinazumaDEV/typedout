@@ -37,7 +37,7 @@ class OpenAIProvider(Provider):
             except ImportError as exc:  # pragma: no cover - depends on env
                 raise ImportError(
                     "OpenAIProvider needs the 'openai' package "
-                    "(pip install structllm[openai])"
+                    "(pip install openai)"
                 ) from exc
             self._client = openai.OpenAI(api_key=self._api_key)
         return self._client
