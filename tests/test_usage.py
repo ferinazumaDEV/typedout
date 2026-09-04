@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from typedout import Usage, cost_of, price_for, register_price
 
 
@@ -31,8 +33,18 @@ def test_cost_of_known_model():
     assert abs(cost - 0.75) < 1e-9
 
 
-def test_cost_of_unknown_model_is_zero():
-    assert cost_of("totally-made-up-model", 1000, 1000) == 0.0
+def test_cost_of_unknown_model_is_zero_and_warns():
+    # $0 for a billable call would be a false figure, so it must not be silent.
+    with pytest.warns(UserWarning, match="no price registered"):
+        assert cost_of("totally-made-up-model", 1000, 1000) == 0.0
+
+
+def test_current_claude_families_are_priced():
+    # The table must resolve current model ids, not only retired ones.
+    for model in ("claude-opus-5", "claude-sonnet-5", "claude-sonnet-4-6", "claude-haiku-4-5"):
+        assert price_for(model) is not None
+        assert cost_of(model, 1_000_000, 1_000_000) > 0
+    assert price_for("claude-sonnet-4-6") == (3.00, 15.00)
 
 
 def test_price_prefix_match():
