@@ -1,6 +1,6 @@
 """OpenAI provider.
 
-The ``openai`` SDK is imported lazily — install ``structllm[openai]`` to use
+The ``openai`` SDK is imported lazily — install the ``openai`` package to use
 this. A pre-built ``client`` can be injected for testing the mapping offline.
 """
 
@@ -37,7 +37,7 @@ class OpenAIProvider(Provider):
             except ImportError as exc:  # pragma: no cover - depends on env
                 raise ImportError(
                     "OpenAIProvider needs the 'openai' package "
-                    "(pip install structllm[openai])"
+                    "(pip install openai)"
                 ) from exc
             self._client = openai.OpenAI(api_key=self._api_key)
         return self._client

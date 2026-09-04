@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "structllm"
 version = "0.1.0"
-description = "Reliable structured output from any LLM — schema-validated JSON with tolerant repair and error-aware retries, provider-agnostic."
+description = "Reliable structured output from OpenAI and Anthropic — schema-validated JSON with tolerant repair and error-aware retries, with a provider interface for others."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }

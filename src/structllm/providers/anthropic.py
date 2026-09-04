@@ -1,7 +1,7 @@
 """Anthropic (Claude) provider.
 
 The ``anthropic`` SDK is imported lazily, so structllm has no hard dependency on
-it — install ``structllm[anthropic]`` to use this. A pre-built ``client`` can be
+it — install the ``anthropic`` package to use this. A pre-built ``client`` can be
 injected (used by the test-suite to exercise the mapping without a network call
 or an API key).
 """
@@ -37,7 +37,7 @@ class AnthropicProvider(Provider):
             except ImportError as exc:  # pragma: no cover - depends on env
                 raise ImportError(
                     "AnthropicProvider needs the 'anthropic' package "
-                    "(pip install structllm[anthropic])"
+                    "(pip install anthropic)"
                 ) from exc
             self._client = anthropic.Anthropic(api_key=self._api_key)
         return self._client
