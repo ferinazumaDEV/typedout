@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![tests](https://img.shields.io/badge/tests-82%20passing-brightgreen.svg)](tests/)
+[![tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg)](tests/)
 
 **Reliable structured output from OpenAI and Anthropic, with a provider interface for others.** Define a schema, get back a validated object — with tolerant JSON repair, error-aware retries, and an offline mock provider. No API key needed to try it.
 
@@ -193,7 +193,7 @@ common `format`s; a `pattern` is not synthesised) or deliberately produce **fenc
 
 ```bash
 pip install -e ".[dev]"
-pytest                    # 82 tests, fully offline
+pytest                    # 100 tests, fully offline
 python examples/quickstart.py
 ```
 
