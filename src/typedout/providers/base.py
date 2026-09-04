@@ -1,6 +1,6 @@
 """Provider interface and the small value objects that cross it.
 
-A provider is the only place structllm talks to a model. Keep it tiny: turn a
+A provider is the only place typedout talks to a model. Keep it tiny: turn a
 list of :class:`Message` into a :class:`Completion`, and (optionally) stream the
 text back in chunks. Everything else — prompting, repair, validation, retries,
 cost — lives in the engine and is provider-independent.

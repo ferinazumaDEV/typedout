@@ -1,4 +1,4 @@
-"""Tests for the tolerant JSON repairer — the heart of structllm."""
+"""Tests for the tolerant JSON repairer — the heart of typedout."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from structllm import loads_repaired, repair_json
-from structllm.errors import RepairError
+from typedout import loads_repaired, repair_json
+from typedout.errors import RepairError
 
 
 def _roundtrip(text):

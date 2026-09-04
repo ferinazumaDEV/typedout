@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from structllm import MockProvider, StructLLM, extract
+from typedout import MockProvider, TypedOut, extract
 
 
 def test_decorator_returns_typed_object(person_cls):
@@ -30,7 +30,7 @@ def test_decorator_forwards_arguments(person_cls):
 
 
 def test_decorator_with_shared_engine(person_cls):
-    engine = StructLLM(MockProvider(script=["valid", "valid"]))
+    engine = TypedOut(MockProvider(script=["valid", "valid"]))
 
     @extract(person_cls, engine=engine)
     def parse_person(text: str) -> "person_cls":  # noqa: F821

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from structllm import jsonschema_lite as js
+from typedout import jsonschema_lite as js
 
 PERSON = {
     "type": "object",

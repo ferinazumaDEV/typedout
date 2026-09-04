@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from structllm import Usage, cost_of, price_for, register_price
+from typedout import Usage, cost_of, price_for, register_price
 
 
 def test_usage_addition():

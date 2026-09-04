@@ -1,18 +1,18 @@
-"""structllm — reliable structured output from any LLM.
+"""typedout — reliable structured output from any LLM.
 
-Define a schema (pydantic model or JSON Schema), and structllm forces the model
+Define a schema (pydantic model or JSON Schema), and typedout forces the model
 to return a valid instance: tolerant JSON repair, schema validation, and
 error-aware retries, behind one provider-agnostic interface.
 
     from pydantic import BaseModel
-    from structllm import StructLLM, MockProvider
+    from typedout import TypedOut, MockProvider
 
     class Person(BaseModel):
         name: str
         age: int
         email: str
 
-    llm = StructLLM(MockProvider(script=["invalid", "valid"]))
+    llm = TypedOut(MockProvider(script=["invalid", "valid"]))
     person = llm.extract(Person, "Ada Lovelace, 36, ada@example.com")
     print(person, llm.last_usage)
 """
@@ -20,13 +20,13 @@ error-aware retries, behind one provider-agnostic interface.
 from __future__ import annotations
 
 from .decorator import extract
-from .engine import StructLLM
+from .engine import TypedOut
 from .errors import (
     ExtractionError,
     ProviderError,
     RepairError,
     SchemaValidationError,
-    StructLLMError,
+    TypedOutError,
 )
 from .providers import (
     Completion,
@@ -43,7 +43,7 @@ from .usage import Usage, cost_of, price_for, register_price
 __version__ = "0.1.0"
 
 __all__ = [
-    "StructLLM",
+    "TypedOut",
     "extract",
     "Schema",
     # providers
@@ -62,7 +62,7 @@ __all__ = [
     "price_for",
     "register_price",
     # errors
-    "StructLLMError",
+    "TypedOutError",
     "RepairError",
     "SchemaValidationError",
     "ExtractionError",
@@ -72,7 +72,7 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    # Lazy provider access so `from structllm import AnthropicProvider` works
+    # Lazy provider access so `from typedout import AnthropicProvider` works
     # without importing the optional SDKs at package import time.
     if name in ("AnthropicProvider", "OpenAIProvider"):
         from . import providers

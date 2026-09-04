@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from structllm.providers.anthropic import AnthropicProvider
-from structllm.providers.base import Message
-from structllm.providers.openai import OpenAIProvider
+from typedout.providers.anthropic import AnthropicProvider
+from typedout.providers.base import Message
+from typedout.providers.openai import OpenAIProvider
 
 
 class FakeAnthropicMessages:
@@ -91,7 +91,7 @@ def test_openai_json_mode_can_be_disabled():
 
 def test_providers_are_lazy_importable():
     # Should be reachable from the package without the SDKs installed.
-    import structllm
+    import typedout
 
-    assert structllm.AnthropicProvider is AnthropicProvider
-    assert structllm.OpenAIProvider is OpenAIProvider
+    assert typedout.AnthropicProvider is AnthropicProvider
+    assert typedout.OpenAIProvider is OpenAIProvider

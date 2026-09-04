@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from structllm import Schema
-from structllm.errors import SchemaValidationError
+from typedout import Schema
+from typedout.errors import SchemaValidationError
 
 
 def test_pydantic_schema_validates_to_instance(person_cls):

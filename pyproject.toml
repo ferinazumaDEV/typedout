@@ -3,13 +3,13 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "structllm"
+name = "typedout"
 version = "0.1.0"
 description = "Reliable structured output from OpenAI and Anthropic — schema-validated JSON with tolerant repair and error-aware retries, with a provider interface for others."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "Fernando", email = "ferinazumaDEV@users.noreply.github.com" }]
+authors = [{ name = "Fernando Aporta Franco", email = "ferinazumaDEV@users.noreply.github.com" }]
 keywords = [
     "llm",
     "structured-output",
@@ -39,8 +39,8 @@ openai = ["openai>=1.30"]
 dev = ["pytest>=7,<9"]
 
 [project.urls]
-Homepage = "https://github.com/ferinazumaDEV/structllm"
-Source = "https://github.com/ferinazumaDEV/structllm"
+Homepage = "https://github.com/ferinazumaDEV/typedout"
+Source = "https://github.com/ferinazumaDEV/typedout"
 
 [tool.setuptools.packages.find]
 where = ["src"]

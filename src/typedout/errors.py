@@ -1,6 +1,6 @@
-"""Exception hierarchy for structllm.
+"""Exception hierarchy for typedout.
 
-All errors raised by the library subclass :class:`StructLLMError`, so callers can
+All errors raised by the library subclass :class:`TypedOutError`, so callers can
 catch everything with a single ``except`` while still being able to distinguish
 parse failures from validation failures when they care.
 """
@@ -10,15 +10,15 @@ from __future__ import annotations
 from typing import List, Optional
 
 
-class StructLLMError(Exception):
-    """Base class for every error raised by structllm."""
+class TypedOutError(Exception):
+    """Base class for every error raised by typedout."""
 
 
-class RepairError(StructLLMError):
+class RepairError(TypedOutError):
     """Raised when a string could not be coerced into parseable JSON."""
 
 
-class SchemaValidationError(StructLLMError):
+class SchemaValidationError(TypedOutError):
     """Raised when parsed JSON does not satisfy a raw JSON Schema.
 
     Pydantic models raise ``pydantic.ValidationError`` instead; the engine treats
@@ -30,11 +30,11 @@ class SchemaValidationError(StructLLMError):
         super().__init__("; ".join(self.errors) if self.errors else "schema validation failed")
 
 
-class ProviderError(StructLLMError):
+class ProviderError(TypedOutError):
     """Raised when an underlying LLM provider call fails."""
 
 
-class ExtractionError(StructLLMError):
+class ExtractionError(TypedOutError):
     """Raised when extraction fails after exhausting all repair/retry attempts.
 
     The full trail of attempt-by-attempt errors is preserved on ``attempts`` and

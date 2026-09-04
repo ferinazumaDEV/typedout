@@ -1,7 +1,7 @@
 """The ``@extract`` decorator: turn a prompt-building function into a typed extractor.
 
 The decorated function returns the *prompt string* (it can format arguments,
-inject context, whatever); the decorator runs it through a :class:`StructLLM`
+inject context, whatever); the decorator runs it through a :class:`TypedOut`
 engine and returns the validated object of the declared schema::
 
     @extract(Person, provider=MockProvider(script=["valid"]))
@@ -16,7 +16,7 @@ from __future__ import annotations
 from functools import wraps
 from typing import Any, Callable, Optional, Union
 
-from .engine import StructLLM
+from .engine import TypedOut
 from .providers.base import Provider
 from .schema import Schema, SchemaSpec
 
@@ -25,7 +25,7 @@ def extract(
     schema: Union[Schema, SchemaSpec],
     *,
     provider: Optional[Provider] = None,
-    engine: Optional[StructLLM] = None,
+    engine: Optional[TypedOut] = None,
     system: Optional[str] = None,
     **engine_kwargs: Any,
 ) -> Callable[[Callable[..., str]], Callable[..., Any]]:
@@ -47,7 +47,7 @@ def extract(
                     f"@extract function {fn.__name__!r} must return a prompt string, "
                     f"got {type(prompt).__name__}"
                 )
-            eng = engine or StructLLM(provider, system=system, **engine_kwargs)  # type: ignore[arg-type]
+            eng = engine or TypedOut(provider, system=system, **engine_kwargs)  # type: ignore[arg-type]
             return eng.extract(schema, prompt, system=system)
 
         wrapper.schema = schema  # type: ignore[attr-defined]

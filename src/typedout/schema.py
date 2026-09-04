@@ -19,7 +19,7 @@ class Schema:
 
     Accepts a ``pydantic.BaseModel`` subclass (validation returns a typed model
     instance) or a JSON Schema ``dict`` (validation returns the plain ``dict``,
-    checked by :mod:`structllm.jsonschema_lite`).
+    checked by :mod:`typedout.jsonschema_lite`).
     """
 
     def __init__(self, spec: SchemaSpec):
@@ -54,7 +54,7 @@ class Schema:
 
         Returns a pydantic instance (model specs) or the ``dict`` (JSON Schema
         specs). Raises ``pydantic.ValidationError`` or
-        :class:`structllm.errors.SchemaValidationError` on failure.
+        :class:`typedout.errors.SchemaValidationError` on failure.
         """
         if self._model is not None:
             return self._model.model_validate(data)

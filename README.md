@@ -1,4 +1,4 @@
-# structllm
+# typedout
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -8,14 +8,14 @@
 
 ```python
 from pydantic import BaseModel
-from structllm import StructLLM, MockProvider
+from typedout import TypedOut, MockProvider
 
 class Person(BaseModel):
     name: str
     age: int
     email: str
 
-llm = StructLLM(MockProvider(script=["invalid", "valid"]))
+llm = TypedOut(MockProvider(script=["invalid", "valid"]))
 person = llm.extract(Person, "Ada Lovelace, 36, ada@example.com")
 
 print(person)            # name='Ada Lovelace' age=36 email='ada@example.com'
@@ -29,7 +29,7 @@ print(llm.last_usage)    # 2 req · 352 in + 19 out = 371 tok · $0.000000
 Getting *valid, typed* data out of an LLM is deceptively hard. Models wrap JSON in
 ```` ```json ```` fences, add a "Sure, here you go" preamble, emit Python's
 `True`/`None`, leave trailing commas, use single quotes, or simply get cut off
-mid-object at the token limit. `structllm` handles all of that behind one small API:
+mid-object at the token limit. `typedout` handles all of that behind one small API:
 
 - **Tolerant JSON repair** — a single-pass, string-aware scanner turns *almost*-JSON into strict JSON (no `eval`, no network).
 - **Schema validation** — pydantic models *or* raw JSON Schema dicts.
@@ -39,17 +39,21 @@ mid-object at the token limit. `structllm` handles all of that behind one small 
 
 ## Install
 
-The distribution name `structllm` is already taken on PyPI by an unrelated
-project, so this package is not published there. Install it from this
-repository:
+`typedout` is not on PyPI yet. Install it from this repository:
 
 ```bash
-pip install git+https://github.com/ferinazumaDEV/structllm.git                             # core (pydantic only)
-pip install "structllm[anthropic] @ git+https://github.com/ferinazumaDEV/structllm.git"    # + Anthropic SDK
-pip install "structllm[openai] @ git+https://github.com/ferinazumaDEV/structllm.git"       # + OpenAI SDK
+pip install git+https://github.com/ferinazumaDEV/typedout.git                             # core (pydantic only)
+pip install "typedout[anthropic] @ git+https://github.com/ferinazumaDEV/typedout.git"    # + Anthropic SDK
+pip install "typedout[openai] @ git+https://github.com/ferinazumaDEV/typedout.git"       # + OpenAI SDK
 ```
 
 Requires Python 3.9+. The only hard dependency is `pydantic>=2`.
+
+> **Renamed from `structllm` on 4 Sep 2026.** The distribution name `structllm` is
+> held on PyPI by a different project doing the same thing — *"Universal Python
+> library for Structured Outputs with any LLM provider"* — so this package could
+> never have been published under it, and anyone searching for that name would have
+> found the other library. The GitHub URL of the old name still redirects here.
 
 ## Usage
 
@@ -57,21 +61,21 @@ Requires Python 3.9+. The only hard dependency is `pydantic>=2`.
 
 ```python
 from pydantic import BaseModel, Field
-from structllm import StructLLM
-from structllm import AnthropicProvider          # or OpenAIProvider, or your own
+from typedout import TypedOut
+from typedout import AnthropicProvider          # or OpenAIProvider, or your own
 
 class Invoice(BaseModel):
     number: str
     total: float = Field(ge=0)
     currency: str
 
-llm = StructLLM(AnthropicProvider(model="claude-3-5-sonnet-latest"))
+llm = TypedOut(AnthropicProvider(model="claude-3-5-sonnet-latest"))
 invoice = llm.extract(Invoice, "Invoice INV-2043, total 1,299.00 EUR, due in 30 days")
 # -> Invoice(number='INV-2043', total=1299.0, currency='EUR')
 ```
 
 The schema is injected into the prompt automatically. If the model's reply doesn't
-parse or doesn't validate, `structllm` repairs it, and — if it still fails —
+parse or doesn't validate, `typedout` repairs it, and — if it still fails —
 re-prompts with the exact errors (up to `max_retries`, default 2).
 
 ### 2. The repair engine, standalone
@@ -79,7 +83,7 @@ re-prompts with the exact errors (up to `max_retries`, default 2).
 `repair_json` is useful on its own. These are **real outputs** from the library:
 
 ```python
-from structllm import repair_json
+from typedout import repair_json
 
 repair_json("```json\n{'name': 'Ada', 'age': 36,}\n```")
 # -> {"name":"Ada","age":36}
@@ -108,7 +112,7 @@ repair_json('Sure! Here you go:\n{"score": 9.5}\nHope that helps!') # prose arou
 ### 3. `@extract` — a typed extractor in three lines
 
 ```python
-from structllm import extract, MockProvider
+from typedout import extract, MockProvider
 
 @extract(Person, provider=MockProvider(script=["valid"]))
 def parse_person(text: str) -> Person:
@@ -123,7 +127,7 @@ validated object of the declared type.
 ### 4. Stream a partial object as it fills in
 
 ```python
-llm = StructLLM(MockProvider(script=["valid"], chunk_size=8))
+llm = TypedOut(MockProvider(script=["valid"], chunk_size=8))
 for partial in llm.stream(Person, "Ada Lovelace, 36, ada@example.com"):
     print(partial)
 print(llm.last_result)   # fully validated Person
@@ -142,7 +146,7 @@ Person(name='Ada Lovelace', age=36, email='ada@example.com')
 ### 5. Track tokens and cost
 
 ```python
-llm = StructLLM(OpenAIProvider(model="gpt-4o-mini"), model="gpt-4o-mini")
+llm = TypedOut(OpenAIProvider(model="gpt-4o-mini"), model="gpt-4o-mini")
 llm.extract(Invoice, "...")
 print(llm.last_usage)     # this call, incl. retries
 print(llm.total_usage)    # running total for the session
@@ -198,7 +202,7 @@ Anthropic/OpenAI payload mapping (via injected fake clients — no SDKs, no keys
 
 ## Part of the ferinazumaDEV ecosystem
 
-`structllm` is one of a set of small, focused tools by ferinazumaDEV for building reliably with LLMs — here, turning free-form model output into schema-validated, machine-readable data you can trust. Related projects:
+`typedout` is one of a set of small, focused tools by ferinazumaDEV for building reliably with LLMs — here, turning free-form model output into schema-validated, machine-readable data you can trust. Related projects:
 
 - [The GEO Handbook](https://github.com/ferinazumaDEV/generative-engine-optimization-handbook) — the open reference on getting content cited by AI answer engines (ChatGPT, Perplexity, Google AI Overviews, Gemini, Copilot).
 - [notebooklm-kb-system](https://github.com/ferinazumaDEV/notebooklm-kb-system) — a token-efficient "second brain" for AI agents: local memory, NotebookLM notebooks, and knowledge routing.

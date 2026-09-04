@@ -1,6 +1,6 @@
 """The extraction engine: prompt → complete → repair → validate → (retry) → typed object.
 
-``StructLLM`` is provider-agnostic. It builds a schema-aware prompt, parses the
+``TypedOut`` is provider-agnostic. It builds a schema-aware prompt, parses the
 model's reply through the tolerant repairer, validates it, and — if validation
 fails — feeds the concrete errors back to the model and tries again, up to
 ``max_retries`` times. Token usage and cost accumulate on the engine.
@@ -28,7 +28,7 @@ _DEFAULT_SYSTEM = (
 )
 
 
-class StructLLM:
+class TypedOut:
     """Reliable structured extraction on top of any :class:`Provider`.
 
     Args:

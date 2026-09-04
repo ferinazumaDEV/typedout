@@ -12,7 +12,7 @@ from .base import Completion, Message, Provider, RawUsage
 
 
 class OpenAIProvider(Provider):
-    """Wraps ``openai.OpenAI`` behind the structllm :class:`Provider` interface."""
+    """Wraps ``openai.OpenAI`` behind the typedout :class:`Provider` interface."""
 
     def __init__(
         self,

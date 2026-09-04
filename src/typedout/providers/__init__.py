@@ -1,4 +1,4 @@
-"""Providers: the boundary between structllm and a concrete LLM backend."""
+"""Providers: the boundary between typedout and a concrete LLM backend."""
 
 from .base import Completion, Message, Provider, RawUsage
 from .mock import MockProvider
@@ -15,7 +15,7 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    # Lazy so importing structllm never requires the anthropic/openai SDKs.
+    # Lazy so importing typedout never requires the anthropic/openai SDKs.
     if name == "AnthropicProvider":
         from .anthropic import AnthropicProvider
 

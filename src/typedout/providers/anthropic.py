@@ -1,6 +1,6 @@
 """Anthropic (Claude) provider.
 
-The ``anthropic`` SDK is imported lazily, so structllm has no hard dependency on
+The ``anthropic`` SDK is imported lazily, so typedout has no hard dependency on
 it — install the ``anthropic`` package to use this. A pre-built ``client`` can be
 injected (used by the test-suite to exercise the mapping without a network call
 or an API key).
@@ -14,7 +14,7 @@ from .base import Completion, Message, Provider, RawUsage
 
 
 class AnthropicProvider(Provider):
-    """Wraps ``anthropic.Anthropic`` behind the structllm :class:`Provider` interface."""
+    """Wraps ``anthropic.Anthropic`` behind the typedout :class:`Provider` interface."""
 
     def __init__(
         self,

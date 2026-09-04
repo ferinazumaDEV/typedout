@@ -6,9 +6,9 @@ import json
 
 import pytest
 
-from structllm import MockProvider, Schema
-from structllm.providers.base import Message
-from structllm.repair import loads_repaired
+from typedout import MockProvider, Schema
+from typedout.providers.base import Message
+from typedout.repair import loads_repaired
 
 
 def _msgs():

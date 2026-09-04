@@ -1,6 +1,6 @@
 """A compact, dependency-free JSON Schema validator.
 
-Only used when a caller hands structllm a raw JSON Schema ``dict`` instead of a
+Only used when a caller hands typedout a raw JSON Schema ``dict`` instead of a
 pydantic model — pydantic validates itself. It covers the keywords that actually
 show up in LLM extraction schemas (types, ``required``, ``properties``,
 ``items``, ``enum``, numeric/length/pattern bounds, ``anyOf``/``allOf`` and
