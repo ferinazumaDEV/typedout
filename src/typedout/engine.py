@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from contextlib import contextmanager
-from typing import Any, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 from pydantic import ValidationError as PydanticValidationError
 
@@ -157,6 +157,13 @@ class TypedOut:
         (a ``dict``/``list`` built by closing the partial JSON). After the
         generator is exhausted, the fully validated object is on ``last_result``.
 
+        When a chunk boundary falls inside a key name the repairer closes the
+        dangling key as ``"nam": null``; such *phantom* keys (not a schema
+        property, ``None``, and a prefix of a real property) are dropped from the
+        yielded snapshots so consumers only ever see fields that can exist. Only
+        top-level keys are cleaned — nested objects are yielded as parsed — and
+        validation still runs on the unfiltered final snapshot.
+
         Raises :class:`ProviderError` if the provider fails while streaming and
         :class:`ExtractionError` if the completed stream does not validate.
         """
@@ -173,7 +180,9 @@ class TypedOut:
                 max_tokens=self.max_tokens,
             )
 
+        props: Dict[str, Any] = sch.json_schema.get("properties") or {}
         final: Any = None
+        shown: Any = _DONE
         partials = iter_partial(chunks)
         while True:
             # Providers stream lazily, so SDK/network failures surface here, not
@@ -182,8 +191,12 @@ class TypedOut:
                 partial = next(partials, _DONE)
             if partial is _DONE:
                 break
-            final = partial
-            yield partial
+            final = partial  # unfiltered: validation must see everything sent
+            cleaned = _drop_phantom_keys(partial, props)
+            if cleaned == shown:
+                continue  # dropping a phantom key can make two snapshots equal
+            shown = cleaned
+            yield cleaned
 
         if final is None:
             raise ExtractionError(f"stream produced no parseable JSON for {sch.name}")
@@ -240,6 +253,24 @@ class TypedOut:
 
 
 _DONE = object()
+
+
+def _drop_phantom_keys(snapshot: Any, props: Dict[str, Any]) -> Any:
+    """Return a copy of *snapshot* without keys the repairer invented.
+
+    A top-level key is a phantom when it is not a schema property, its value is
+    ``None`` and it is a prefix of a real property — the signature of a key name
+    cut by a chunk boundary (``{"nam`` -> ``{"nam": null}``). Anything else,
+    including genuine ``null`` fields and extra keys a schema may allow, stays.
+    Non-dict snapshots and schemas without ``properties`` pass through as-is.
+    """
+    if not isinstance(snapshot, dict) or not props:
+        return snapshot
+    return {
+        key: value
+        for key, value in snapshot.items()
+        if not (key not in props and value is None and any(p.startswith(key) for p in props))
+    }
 
 
 @contextmanager
