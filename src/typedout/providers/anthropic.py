@@ -14,7 +14,13 @@ from .base import Completion, Message, Provider, RawUsage
 
 
 class AnthropicProvider(Provider):
-    """Wraps ``anthropic.Anthropic`` behind the typedout :class:`Provider` interface."""
+    """Wraps ``anthropic.Anthropic`` behind the typedout :class:`Provider` interface.
+
+    The engine's ``temperature`` argument is accepted for interface compatibility
+    but is **not** sent to Anthropic: ``anthropic`` SDK 1.x removed it from
+    ``messages.create`` (passing it raises ``TypeError`` before any request), and
+    current models reject it server-side. Requests therefore use the API default.
+    """
 
     def __init__(
         self,
@@ -57,7 +63,6 @@ class AnthropicProvider(Provider):
             system=system or None,
             messages=[{"role": m.role, "content": m.content} for m in chat],
             max_tokens=max_tokens or self.max_tokens,
-            temperature=temperature,
         )
         text = "".join(
             getattr(block, "text", "")
