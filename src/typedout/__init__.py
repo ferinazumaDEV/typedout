@@ -1,4 +1,4 @@
-"""typedout — reliable structured output from any LLM.
+"""typedout — reliable structured output from OpenAI and Anthropic, with a provider interface for others.
 
 Define a schema (pydantic model or JSON Schema), and typedout forces the model
 to return a valid instance: tolerant JSON repair, schema validation, and

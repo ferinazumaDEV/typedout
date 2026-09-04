@@ -130,18 +130,24 @@ validated object of the declared type.
 llm = TypedOut(MockProvider(script=["valid"], chunk_size=8))
 for partial in llm.stream(Person, "Ada Lovelace, 36, ada@example.com"):
     print(partial)
-print(llm.last_result)   # fully validated Person
+print(repr(llm.last_result))   # fully validated Person
 ```
 
 Real output — the object materialises field by field, even from a half-received stream:
 
 ```
+{}
 {'name': 'Ada'}
+{'name': 'Ada Lovelac'}
+{'name': 'Ada Lovelace'}
 {'name': 'Ada Lovelace', 'age': 36}
 {'name': 'Ada Lovelace', 'age': 36, 'email': 'ada'}
+{'name': 'Ada Lovelace', 'age': 36, 'email': 'ada@example'}
 {'name': 'Ada Lovelace', 'age': 36, 'email': 'ada@example.com'}
 Person(name='Ada Lovelace', age=36, email='ada@example.com')
 ```
+
+> `AnthropicProvider` and `OpenAIProvider` do not yet implement token streaming; with them `stream()` yields a single snapshot containing the full object. Override `Provider.stream()` in your own provider to get progressive snapshots.
 
 ### 5. Track tokens and cost
 
@@ -219,4 +225,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-*Built by Fernando ([@ferinazumaDEV](https://github.com/ferinazumaDEV)).*
+*Built by Fernando Aporta Franco ([@ferinazumaDEV](https://github.com/ferinazumaDEV)).*
