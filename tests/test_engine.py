@@ -4,7 +4,25 @@ from __future__ import annotations
 
 import pytest
 
-from typedout import ExtractionError, MockProvider, TypedOut
+from typedout import (
+    AnthropicProvider,
+    ExtractionError,
+    MockProvider,
+    ProviderError,
+    TypedOut,
+    TypedOutError,
+)
+
+
+class _FailingMessages:
+    def create(self, **kwargs):
+        raise RuntimeError("boom")
+
+
+class _FailingAnthropicClient:
+    """Fake SDK client whose only call blows up, like a network/SDK failure."""
+
+    messages = _FailingMessages()
 
 
 def test_valid_first_try(person_cls):
@@ -111,3 +129,21 @@ def test_repair_can_be_disabled(person_cls):
     llm = TypedOut(MockProvider(script=["fenced"]), repair=False, max_retries=0)
     with pytest.raises(ExtractionError):
         llm.extract(person_cls, "...")
+
+
+def test_provider_failure_is_wrapped_in_provider_error(person_cls):
+    llm = TypedOut(AnthropicProvider(client=_FailingAnthropicClient()), max_retries=0)
+    with pytest.raises(ProviderError) as exc:
+        llm.extract(person_cls, "x")
+    # One `except TypedOutError` catches it, and the original cause is preserved.
+    assert isinstance(exc.value, TypedOutError)
+    assert isinstance(exc.value.__cause__, RuntimeError)
+    assert "RuntimeError: boom" in str(exc.value)
+
+
+def test_stream_provider_failure_is_wrapped_in_provider_error(person_cls):
+    # The base-class stream() calls complete() lazily, so the failure happens
+    # while iterating, not when stream() is called.
+    llm = TypedOut(AnthropicProvider(client=_FailingAnthropicClient()))
+    with pytest.raises(ProviderError):
+        list(llm.stream(person_cls, "x"))

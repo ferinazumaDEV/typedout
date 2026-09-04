@@ -9,11 +9,18 @@ fails — feeds the concrete errors back to the model and tries again, up to
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from typing import Any, Iterator, List, Optional, Union
 
 from pydantic import ValidationError as PydanticValidationError
 
-from .errors import ExtractionError, RepairError, SchemaValidationError
+from .errors import (
+    ExtractionError,
+    ProviderError,
+    RepairError,
+    SchemaValidationError,
+    TypedOutError,
+)
 from .providers.base import Message, Provider
 from .repair import loads_repaired
 from .schema import Schema, SchemaSpec, ensure_schema
@@ -81,7 +88,8 @@ class TypedOut:
         """Extract a validated object of *schema* from *prompt*.
 
         Returns a pydantic instance (model schemas) or a ``dict`` (JSON Schema
-        dicts). Raises :class:`ExtractionError` if every attempt fails.
+        dicts). Raises :class:`ExtractionError` if every attempt fails and
+        :class:`ProviderError` if the provider call itself fails.
         """
         sch = ensure_schema(schema)
         messages = self._build_messages(sch, prompt, system)
@@ -89,13 +97,14 @@ class TypedOut:
         attempt_errors: List[str] = []
 
         for attempt in range(self.max_retries + 1):
-            completion = self.provider.complete(
-                messages,
-                schema=sch,
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-            )
+            with _provider_errors():
+                completion = self.provider.complete(
+                    messages,
+                    schema=sch,
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                )
             run_usage += self._account(completion)
             self.last_raw = completion.text
 
@@ -147,27 +156,44 @@ class TypedOut:
         Each yielded value is the best-effort parse of everything received so far
         (a ``dict``/``list`` built by closing the partial JSON). After the
         generator is exhausted, the fully validated object is on ``last_result``.
+
+        Raises :class:`ProviderError` if the provider fails while streaming and
+        :class:`ExtractionError` if the completed stream does not validate.
         """
         sch = ensure_schema(schema)
         messages = self._build_messages(sch, prompt, system)
         self.last_result = None
 
-        chunks = self.provider.stream(
-            messages,
-            schema=sch,
-            model=self.model,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-        )
+        with _provider_errors():
+            chunks = self.provider.stream(
+                messages,
+                schema=sch,
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+            )
 
         final: Any = None
-        for partial in iter_partial(chunks):
+        partials = iter_partial(chunks)
+        while True:
+            # Providers stream lazily, so SDK/network failures surface here, not
+            # at the call above; convert them the same way.
+            with _provider_errors():
+                partial = next(partials, _DONE)
+            if partial is _DONE:
+                break
             final = partial
             yield partial
 
         if final is None:
             raise ExtractionError(f"stream produced no parseable JSON for {sch.name}")
-        self.last_result = sch.validate(final)
+        try:
+            self.last_result = sch.validate(final)
+        except (PydanticValidationError, SchemaValidationError) as exc:
+            raise ExtractionError(
+                f"streamed {sch.name} failed validation: {_format_validation_error(exc)}",
+                last_raw=json.dumps(final),
+            ) from exc
 
     def collect(
         self,
@@ -211,6 +237,24 @@ class TypedOut:
         )
         self.total_usage += unit
         return unit
+
+
+_DONE = object()
+
+
+@contextmanager
+def _provider_errors():
+    """Re-raise whatever a provider throws as :class:`ProviderError`.
+
+    Library errors (``TypedOutError`` subclasses) pass through untouched, so the
+    errors.py contract holds: everything ``TypedOut`` raises is a ``TypedOutError``.
+    """
+    try:
+        yield
+    except TypedOutError:
+        raise
+    except Exception as exc:
+        raise ProviderError(f"{type(exc).__name__}: {exc}") from exc
 
 
 def _format_validation_error(exc: Exception) -> str:

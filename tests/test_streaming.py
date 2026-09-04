@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typedout import MockProvider, TypedOut
+import pytest
+
+from typedout import ExtractionError, MockProvider, TypedOut
 from typedout.streaming import iter_partial
 
 
@@ -51,3 +53,12 @@ def test_stream_progression_is_partial_before_complete(company_cls):
     key_counts = [len(s) for s in snapshots]
     assert key_counts[0] <= key_counts[-1]
     assert llm.last_result.name
+
+
+def test_stream_invalid_raises_extraction_error(person_cls):
+    # A schema-invalid stream must surface as a library error, like extract().
+    llm = TypedOut(MockProvider(script=["invalid"]))
+    with pytest.raises(ExtractionError) as exc:
+        list(llm.stream(person_cls, "x"))
+    assert exc.value.last_raw is not None
+    assert llm.last_result is None
