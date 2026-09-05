@@ -24,7 +24,7 @@ class AnthropicProvider(Provider):
 
     def __init__(
         self,
-        model: str = "claude-3-5-sonnet-latest",
+        model: str = "claude-opus-5",
         *,
         client: Any = None,
         api_key: Optional[str] = None,

@@ -69,10 +69,19 @@ class Invoice(BaseModel):
     total: float = Field(ge=0)
     currency: str
 
-llm = TypedOut(AnthropicProvider(model="claude-3-5-sonnet-latest"))
+llm = TypedOut(AnthropicProvider())  # defaults to claude-opus-5
 invoice = llm.extract(Invoice, "Invoice INV-2043, total 1,299.00 EUR, due in 30 days")
 # -> Invoice(number='INV-2043', total=1299.0, currency='EUR')
 ```
+
+The default is **`claude-opus-5`** — the strongest model, chosen because the
+retry loop feeds validation errors back to the model, and a model that gets it
+right first time is often cheaper per *successful extraction* than a cheaper one
+that needs three attempts. It is not the cheapest per token: at the time of
+writing it is $5 / $25 per million input / output tokens against $2 / $10 for
+`claude-sonnet-5`. Pass `model=` to choose another, and read `llm.last_usage`
+for what a call actually cost.
+
 
 The schema is injected into the prompt automatically. If the model's reply doesn't
 parse or doesn't validate, `typedout` repairs it, and — if it still fails —
