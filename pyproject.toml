@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "typedout-py"
-version = "0.1.0"
+version = "0.1.1"
 description = "Reliable structured output from OpenAI and Anthropic — schema-validated JSON with tolerant repair and error-aware retries, with a provider interface for others."
 readme = "README.md"
 # 3.10 is the floor because anthropic 1.x requires it, and no lower: a floor is a

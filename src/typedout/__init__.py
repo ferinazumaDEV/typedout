@@ -40,7 +40,7 @@ from .schema import Schema
 from .streaming import iter_partial
 from .usage import Usage, cost_of, price_for, register_price
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "TypedOut",
