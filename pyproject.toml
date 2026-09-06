@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "typedout"
+name = "typedout-py"
 version = "0.1.0"
 description = "Reliable structured output from OpenAI and Anthropic — schema-validated JSON with tolerant repair and error-aware retries, with a provider interface for others."
 readme = "README.md"

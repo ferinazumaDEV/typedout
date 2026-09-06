@@ -24,7 +24,14 @@ def test_every_public_name_resolves():
 
 
 def test_version_matches_installed_metadata():
-    assert typedout.__version__ == importlib.metadata.version("typedout")
+    # The distribution is "typedout-py" while the import is "typedout": PyPI
+    # refuses the bare name (it collides with the unrelated "typed-out" once
+    # separators are normalised away). importlib.metadata looks things up by
+    # DISTRIBUTION name, so this must not be "typedout" — see the README.
+    #
+    # The point of the test is unchanged: __version__ is a literal in
+    # __init__.py and this is what catches it drifting from pyproject.toml.
+    assert typedout.__version__ == importlib.metadata.version("typedout-py")
 
 
 class _MinimalProvider(Provider):

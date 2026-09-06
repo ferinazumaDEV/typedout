@@ -39,21 +39,32 @@ mid-object at the token limit. `typedout` handles all of that behind one small A
 
 ## Install
 
-`typedout` is not on PyPI yet. Install it from this repository:
-
 ```bash
-pip install git+https://github.com/ferinazumaDEV/typedout.git                             # core (pydantic only)
-pip install "typedout[anthropic] @ git+https://github.com/ferinazumaDEV/typedout.git"    # + Anthropic SDK
-pip install "typedout[openai] @ git+https://github.com/ferinazumaDEV/typedout.git"       # + OpenAI SDK
+pip install typedout-py                # core (pydantic only)
+pip install "typedout-py[anthropic]"   # + Anthropic SDK
+pip install "typedout-py[openai]"      # + OpenAI SDK
 ```
 
-Requires Python 3.9+. The only hard dependency is `pydantic>=2`.
+**Install `typedout-py`, import `typedout`.** The distribution name carries a `-py`
+suffix; the package you import does not:
+
+```python
+from typedout import TypedOut
+```
+
+Requires Python 3.10+. The only hard dependency is `pydantic>=2`.
 
 > **Renamed from `structllm` on 4 Sep 2026.** The distribution name `structllm` is
 > held on PyPI by a different project doing the same thing — *"Universal Python
 > library for Structured Outputs with any LLM provider"* — so this package could
 > never have been published under it, and anyone searching for that name would have
 > found the other library. The GitHub URL of the old name still redirects here.
+>
+> **And why the `-py` suffix.** PyPI also refuses the bare name `typedout`: it
+> normalises away `-`, `_` and `.` before comparing, so `typedout` collides with an
+> unrelated project called `typed-out`. Renaming the library a third time would have
+> cost more than it is worth, so the distribution is `typedout-py` and the import
+> stays `typedout` — the same split as `beautifulsoup4`/`bs4` or `pillow`/`PIL`.
 
 ## Usage
 
