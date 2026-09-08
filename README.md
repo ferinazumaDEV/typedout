@@ -1,6 +1,8 @@
 # typedout
 
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+[English](README.md) · **Español**: [README.es.md](README.es.md)
+
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-100%20passing-brightgreen.svg)](tests/)
 
