@@ -1,3 +1,4 @@
+<!-- synced-from: 489dedb3f52407ccc52186715cd3d51a74aaad5a -->
 # typedout
 
 **Español** · [English](README.md)
