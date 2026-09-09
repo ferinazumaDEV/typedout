@@ -1,4 +1,4 @@
-<!-- synced-from: 489dedb3f52407ccc52186715cd3d51a74aaad5a -->
+<!-- synced-from: 1c35fbfed4fcc223729fb72b0f11315c60a69367 -->
 # typedout
 
 **Español** · [English](README.md)
