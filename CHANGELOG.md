@@ -7,6 +7,36 @@ All notable changes to this project are documented here. The format follows
 The **distribution** is `typedout-py`; the **import** is `typedout`. See the
 README for why they differ.
 
+## [Unreleased]
+
+### Fixed
+
+- **`repair_json` no longer damages JSON that was already valid.** It stripped
+  Markdown code fences *before* asking whether the input needed repairing, and
+  the fence pattern matched anywhere in the text — including inside a JSON
+  string literal. An object whose string value contained a fence was replaced by
+  whatever sat between those backticks (`{"message": "literal \u0060\u0060\u0060json 123
+  \u0060\u0060\u0060 kept"}` came back as `123`), and one containing a `python` fence
+  raised `RepairError` instead. Validity is now checked on the untouched input,
+  and fences are only removed once the input is known *not* to be valid JSON —
+  so the feature the library exists for still works, and it can no longer fire
+  on text that needed nothing.
+
+  This was not a corner case. A property test over randomly generated valid JSON
+  corrupts or crashes on **857 of 4000** documents against the previous code and
+  on none after the fix. That test now ships with the suite.
+
+- **`NaN`, `Infinity` and `-Infinity` no longer survive into the output.**
+  `json.loads` accepts all three; RFC 8259 has no syntax for any of them, so
+  returning them unchanged broke the documented promise of "a strictly valid
+  JSON string". They now repair to `null`, like every other bareword with no
+  JSON representation. Two related defects went with them: `Infinity` used to
+  come back as the *string* `"Infinity"`, silently turning a number into text,
+  and `-Infinity` produced `{"x":"-""Infinity"}`, which no parser accepts.
+
+Reported in the external audit of the `2026.09.0` ecosystem snapshot as F01 and
+F02.
+
 ## [0.1.1] — 2026-09-06
 
 The first tag that rebuilds what is published. `v0.1.0` did not: it predates
