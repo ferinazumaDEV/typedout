@@ -32,7 +32,16 @@ _ESCAPES = {
     "n": "\n", "t": "\t", "r": "\r", "b": "\b", "f": "\f",
     "/": "/", "\\": "\\", '"': '"', "'": "'", "`": "`", "\n": "",
 }
-_NULL_WORDS = {"null", "none", "nil", "undefined", "nan", "na"}
+# Barewords with no JSON representation. The three non-finite floats live here
+# for the same reason as the rest: RFC 8259 has no literal for them, and null is
+# the only answer that does not invent data. "NaN" already behaved this way; the
+# other two used to come out as the STRING "Infinity", silently turning a number
+# into text.
+_NULL_WORDS = {
+    "null", "none", "nil", "undefined", "na",
+    "nan", "-nan", "+nan",
+    "inf", "-inf", "+inf", "infinity", "-infinity", "+infinity",
+}
 
 
 def loads_repaired(text: str) -> Any:
@@ -43,26 +52,65 @@ def loads_repaired(text: str) -> Any:
 def repair_json(text: str) -> str:
     """Return a strictly valid JSON string parsed from messy model output.
 
+    Valid JSON is returned unchanged -- including when one of its string values
+    contains backticks or a Markdown code fence. Fences are only removed once
+    the input has been found *not* to be valid JSON.
+
+    "Strictly valid" excludes ``NaN``, ``Infinity`` and ``-Infinity``, which
+    Python's ``json`` accepts but RFC 8259 has no syntax for. They repair to
+    ``null``, like every other bareword this scanner cannot represent.
+
     Raises :class:`RepairError` if the input cannot be salvaged into JSON.
     """
     if not isinstance(text, str):
         raise RepairError(f"repair_json expects str, got {type(text).__name__}")
 
-    stripped = _strip_code_fences(text).strip()
+    original = text.strip()
 
-    # Fast path: already-valid JSON is returned untouched.
+    # Fast path, and it runs on the UNTOUCHED input on purpose. This used to
+    # strip fences first, which meant a valid object whose string value happened
+    # to contain ```json ... ``` was replaced by whatever sat between those
+    # backticks, and one containing ```python ... ``` raised instead. Repairing
+    # something that needed no repair is the worst thing this function can do,
+    # so validity is asked before anything is removed.
     try:
-        json.loads(stripped)
-        return stripped
-    except json.JSONDecodeError:
+        _strict_loads(original)
+        return original
+    except (json.JSONDecodeError, ValueError):
         pass
+
+    # Only now: the input is not valid JSON, so an outer Markdown wrapper is a
+    # plausible reason and removing it cannot destroy a well-formed value.
+    stripped = _strip_code_fences(text).strip()
+    if stripped != original:
+        try:
+            _strict_loads(stripped)
+            return stripped
+        except (json.JSONDecodeError, ValueError):
+            pass
 
     repaired = _Repairer(stripped).run()
     try:
-        json.loads(repaired)
-    except json.JSONDecodeError as exc:  # pragma: no cover - safety net
+        _strict_loads(repaired)
+    except (json.JSONDecodeError, ValueError) as exc:  # pragma: no cover - safety net
         raise RepairError(f"could not repair into valid JSON: {exc}") from exc
     return repaired
+
+
+def _reject_non_finite(name: str) -> Any:
+    """Refuse the three constants Python accepts and JSON has no syntax for."""
+    raise ValueError(f"{name} is not valid JSON (RFC 8259 has no such literal)")
+
+
+def _strict_loads(candidate: str) -> Any:
+    """``json.loads`` without Python's non-finite extensions.
+
+    ``json.loads`` accepts ``NaN``, ``Infinity`` and ``-Infinity`` by default.
+    They are not JSON, so a string containing them must not be reported as
+    already valid, nor returned as a repaired result. This function is what
+    makes "a strictly valid JSON string" true rather than nearly true.
+    """
+    return json.loads(candidate, parse_constant=_reject_non_finite)
 
 
 def _strip_code_fences(text: str) -> str:
@@ -200,7 +248,20 @@ class _Repairer:
             self.i += 1
         raw = self.s[start : self.i]
         norm = _normalize_number(raw)
-        self.out.append(norm if norm is not None else json.dumps(raw))
+        if norm is not None:
+            self.out.append(norm)
+            return
+        # A leading sign got us here, but what follows is not a number:
+        # "-Infinity" used to stop after the "-" and emit `"-""Infinity"`, which
+        # is not JSON at all. Take the rest of the token and let the bareword
+        # rules decide what it means.
+        while self.i < self.n and self.s[self.i] not in _DELIMS:
+            self.i += 1
+        word = self.s[start : self.i]
+        if word.lower() in _NULL_WORDS:
+            self.out.append("null")
+        else:
+            self.out.append(json.dumps(word))
 
     def _read_bareword(self) -> None:
         start = self.i
@@ -272,11 +333,18 @@ def _normalize_number(raw: str) -> Optional[str]:
     if not r or r in ("-", ".", "-."):
         return None
     try:
-        json.loads(r)
-        return r
-    except json.JSONDecodeError:
+        value = json.loads(r, parse_constant=_reject_non_finite)
+    except (json.JSONDecodeError, ValueError):
         pass
+    else:
+        return r if isinstance(value, (int, float)) else None
     try:
-        return repr(float(r))
+        number = float(r)
     except ValueError:
         return None
+    # float() happily returns inf and nan for "Infinity", "-Infinity" and "NaN",
+    # and repr() then emits "inf" / "-inf" / "nan" -- none of which any JSON
+    # parser accepts. There is no JSON number for these, so they are not numbers.
+    if number != number or number in (float("inf"), float("-inf")):
+        return None
+    return repr(number)
