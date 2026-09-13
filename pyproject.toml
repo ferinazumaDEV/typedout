@@ -9,6 +9,9 @@ description = "Reliable structured output from OpenAI and Anthropic — schema-v
 readme = "README.md"
 # 3.10 is the floor because anthropic 1.x requires it, and no lower: a floor is a
 # minimum, not a recommendation. Python 3.9 reached end of life on 2025-10-31.
+# Version policy: this floor is a minimum, not a recommendation, and everything below 3.11 is
+# compatibility rather than support. 0.2.0 raises the floor to 3.11 (3.10 reaches end of life in
+# October 2026). Nothing changes within 0.1.x.
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Fernando Aporta Franco", email = "ferinazumaDEV@users.noreply.github.com" }]
