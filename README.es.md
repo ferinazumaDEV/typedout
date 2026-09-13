@@ -1,4 +1,4 @@
-<!-- synced-from: 8f001757681c1fe101f699f37ba3ee476c50d022 -->
+<!-- synced-from: 84bd1df6b2ed409d9edaa8d719ee0ae2f48e5a2c -->
 # typedout
 
 **Español** · [English](README.md)
@@ -33,7 +33,7 @@ Sacar datos *válidos y tipados* de un modelo de lenguaje es más difícil de lo
 - **Reparación tolerante de JSON** — un escáner de una pasada, consciente de las cadenas, convierte *casi*-JSON en JSON estricto (sin `eval`, sin red).
 - **Validación de esquema** — modelos de pydantic *o* diccionarios de JSON Schema en crudo.
 - **Reintentos que aprenden del error** — cuando la validación falla, los errores concretos se le devuelven al modelo y lo intenta otra vez.
-- **Agnóstico de proveedor** — Anthropic, OpenAI o el tuyo; incluye un **`MockProvider`** determinista para que las pruebas y las demos funcionen sin salir a la red.
+- **Dos proveedores, Anthropic y OpenAI** — o conecta el tuyo; incluye un **`MockProvider`** determinista para que las pruebas y las demos funcionen sin salir a la red.
 - **Extras** — **streaming** de objetos parciales, **conteo de tokens y coste**, y un decorador **`@extract`** que convierte cualquier función en un extractor tipado.
 
 ## Instalación

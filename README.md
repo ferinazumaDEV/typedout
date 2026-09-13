@@ -36,7 +36,7 @@ mid-object at the token limit. `typedout` handles all of that behind one small A
 - **Tolerant JSON repair** — a single-pass, string-aware scanner turns *almost*-JSON into strict JSON (no `eval`, no network).
 - **Schema validation** — pydantic models *or* raw JSON Schema dicts.
 - **Error-aware retries** — when validation fails, the concrete errors are fed back to the model and it tries again.
-- **Provider-agnostic** — Anthropic, OpenAI, or your own; a deterministic **`MockProvider`** is included so tests and demos run fully offline.
+- **Two providers, Anthropic and OpenAI** — or plug in your own; a deterministic **`MockProvider`** is included so tests and demos run fully offline.
 - **Extras** — partial-object **streaming**, **token/cost tracking**, and an **`@extract` decorator** that turns any function into a typed extractor.
 
 ## Install
@@ -235,7 +235,7 @@ Anthropic/OpenAI payload mapping (via injected fake clients — no SDKs, no keys
 
 - [The GEO Handbook](https://github.com/ferinazumaDEV/generative-engine-optimization-handbook) — the open reference on getting content cited by AI answer engines (ChatGPT, Perplexity, Google AI Overviews, Gemini, Copilot).
 - [notebooklm-kb-system](https://github.com/ferinazumaDEV/notebooklm-kb-system) — a token-efficient "second brain" for AI agents: local memory, NotebookLM notebooks, and knowledge routing.
-- [politeclient](https://github.com/ferinazumaDEV/politeclient) — a polite, bulletproof HTTP client for Python: retries with backoff, per-host rate-limiting, and caching — handy for talking to LLM provider APIs.
+- [politeclient](https://github.com/ferinazumaDEV/politeclient) — a polite HTTP client for Python: retries with backoff, per-host rate-limiting, and caching — handy for talking to LLM provider APIs.
 - [scaffld](https://github.com/ferinazumaDEV/scaffld) — scaffold fully-wired Python projects (tests, CI, pre-commit, license) from templates.
 - Hub & writing: [zentimes.es](https://zentimes.es).
 
