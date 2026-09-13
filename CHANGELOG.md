@@ -38,7 +38,7 @@ README for why they differ.
   handle alone, such as a lone scalar inside a fence — which is now pinned by a
   test, because the reorder briefly broke it and nothing in the suite noticed.
   A mutation test (every valid document × trailing comma, prose, outer fence,
-  comment; 2 000+ cases, fixed seed) ships with it.  tests.
+  comment; 2 000+ cases, fixed seed) ships with it. 122 tests.
 
 - **`NaN`, `Infinity` and `-Infinity` no longer survive into the output.**
   `json.loads` accepts all three; RFC 8259 has no syntax for any of them, so
