@@ -47,7 +47,7 @@ dependencies = [
 # and an uncapped range would let a future 2.x break this package silently.
 anthropic = ["anthropic>=1,<2"]
 openai = ["openai>=1.30,<2"]
-dev = ["pytest>=7,<9"]
+dev = ["pytest>=7,<10"]
 
 [project.urls]
 Homepage = "https://github.com/ferinazumaDEV/typedout"
