@@ -79,8 +79,31 @@ def repair_json(text: str) -> str:
     except (json.JSONDecodeError, ValueError):
         pass
 
-    # Only now: the input is not valid JSON, so an outer Markdown wrapper is a
-    # plausible reason and removing it cannot destroy a well-formed value.
+    # The input needs repair. Try the scanner on the UNTOUCHED text first: it
+    # already skips leading prose to the first container, reads string literals
+    # as opaque, and stops when the top-level value closes -- so a fence sitting
+    # inside a string is never mistaken for a wrapper, and a fence that really
+    # wraps the value is simply prose the scanner walks past.
+    #
+    # This is the second half of the F01 fix. The first half only guarded input
+    # that was already valid; input that needed repair (a trailing comma was
+    # enough) still went through the fence stripper first, and the stripper
+    # still fired inside string literals. Caught by the external re-audit.
+    # Only when there is a container to find. A lone scalar inside a fence
+    # ("```json\n42\n```") has none, and letting the scanner at it would read the
+    # backticks as string delimiters and hand back the *string* "``json\n42\n``"
+    # -- valid JSON, wrong answer. Scalars go through the fence stripper below.
+    repairer = _Repairer(original)
+    if repairer._find_start() is not None:
+        try:
+            return _finish(repairer.run())
+        except RepairError:
+            pass
+
+    # Fallback: stripping fences is only for what the scanner cannot handle on
+    # its own -- a lone scalar inside a fence ("```json\n42\n```" has no
+    # container to find). By now the input is known not to be valid JSON, so
+    # removing a wrapper cannot destroy a well-formed value.
     stripped = _strip_code_fences(text).strip()
     if stripped != original:
         try:
@@ -88,8 +111,13 @@ def repair_json(text: str) -> str:
             return stripped
         except (json.JSONDecodeError, ValueError):
             pass
+    # With or without a fence to remove, a bare scalar (`True`, `None`, 'hi')
+    # still deserves the scalar repair; prose with no value in it raises there.
+    return _finish(_Repairer(stripped).run())
 
-    repaired = _Repairer(stripped).run()
+
+def _finish(repaired: str) -> str:
+    """The repairer's output must itself be strictly valid, or it is no repair."""
     try:
         _strict_loads(repaired)
     except (json.JSONDecodeError, ValueError) as exc:  # pragma: no cover - safety net

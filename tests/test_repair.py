@@ -247,3 +247,77 @@ def test_repair_preserves_every_valid_json_document():
         obj = _random_value(rng)
         source = json.dumps(obj)
         assert json.loads(repair_json(source)) == obj, f"corrupted: {source!r}"
+
+
+# --- F01, second half: the REPAIR path must respect string literals too ------ #
+#
+# The first fix only moved the validity check ahead of the fence stripper, so it
+# protected input that was already valid JSON. Input that needed repair -- a
+# trailing comma was enough -- still went through _strip_code_fences first, and
+# the stripper still fired on a fence sitting inside a string literal:
+#
+#     repair_json('{"message": "literal ```json 123 ``` kept",}')   ->  123
+#
+# Caught by the external re-audit's adversarial re-run. The scanner already
+# finds the first container and reads string literals as opaque, so the repair
+# path is now tried on the untouched input first; fences are only stripped as a
+# fallback when that fails (a lone scalar inside a fence, for example).
+
+REPAIRABLE_WITH_FENCE_INSIDE_STRING = [
+    pytest.param('{"message": "literal ```json 123 ``` kept",}',
+                 {"message": "literal ```json 123 ``` kept"}, id="trailing-comma"),
+    pytest.param("{'message': 'see ```json 1 ``` here'}",
+                 {"message": "see ```json 1 ``` here"}, id="single-quotes"),
+    pytest.param('{"a": "x ```python print(1) ``` y", "b": 1,}',
+                 {"a": "x ```python print(1) ``` y", "b": 1}, id="two-keys-python-fence"),
+    pytest.param('Sure!\n{"note": "keep ```json 7 ``` please",}\nDone.',
+                 {"note": "keep ```json 7 ``` please"}, id="prose-around-it"),
+]
+
+
+@pytest.mark.parametrize("damaged,expected", REPAIRABLE_WITH_FENCE_INSIDE_STRING)
+def test_repair_path_leaves_fences_inside_strings_alone(damaged, expected):
+    assert json.loads(repair_json(damaged)) == expected
+
+
+def _mutations(source):
+    """Damage a valid document OUTSIDE its string literals, in ways the repairer promises to fix."""
+    yield "trailing-comma", source[:-1] + ",}" if source.endswith("}") else source
+    yield "prose", "Sure! Here you go:\n" + source + "\nHope that helps!"
+    yield "outer-fence", "```json\n" + source + "\n```"
+    yield "line-comment", "// generated\n" + source
+    yield "prose-and-fence", "Of course.\n```json\n" + source + "\n```\nLet me know."
+
+
+def test_repair_survives_damage_outside_string_literals():
+    """Mutation test: for every valid document, every mutation repairs back to it."""
+    import random
+    rng = random.Random(20260911)
+    checked = 0
+    for _ in range(400):
+        obj = _random_value(rng)
+        if not isinstance(obj, (dict, list)):
+            obj = {"v": obj}              # the trailing-comma mutation needs a container
+        source = json.dumps(obj)
+        for name, damaged in _mutations(source):
+            out = repair_json(damaged)
+            assert json.loads(out) == obj, f"{name} mutation not repaired: {damaged[:120]!r}"
+            checked += 1
+    assert checked >= 2000, "every document times every mutation, or the test is hollow"
+
+
+@pytest.mark.parametrize("fenced,expected", [
+    ("```json\n42\n```", 42),
+    ("```\n\"hello\"\n```", "hello"),
+    ("```json\ntrue\n```", True),
+    ("Here:\n```json\nnull\n```", None),
+])
+def test_lone_scalar_inside_a_fence_is_still_unwrapped(fenced, expected):
+    """No container to find, so the fence stripper must still get its turn.
+
+    Pinned because the repair-path reorder briefly returned the STRING
+    "``json\\n42\\n``" here -- valid JSON, wrong value -- and nothing in the
+    suite noticed. A fix that changes control flow needs the path it bypasses
+    covered, not only the path it adds.
+    """
+    assert json.loads(repair_json(fenced)) == expected

@@ -26,6 +26,20 @@ README for why they differ.
   corrupts or crashes on **857 of 4000** documents against the previous code and
   on none after the fix. That test now ships with the suite.
 
+- **F01, second half: the repair path now respects string literals too.** The
+  first fix only moved the validity check ahead of the fence stripper, so it
+  protected input that was already valid JSON. Input that *needed* repair — a
+  trailing comma was enough — still went through the stripper first, and the
+  stripper still fired on a fence inside a string literal:
+  `{"message": "literal ```json 123 ``` kept",}` came back as `123`. Caught by
+  the external re-audit's adversarial re-run. The scanner is now tried on the
+  untouched input first (it finds the first container and reads strings as
+  opaque); fences are only stripped as a fallback for what the scanner cannot
+  handle alone, such as a lone scalar inside a fence — which is now pinned by a
+  test, because the reorder briefly broke it and nothing in the suite noticed.
+  A mutation test (every valid document × trailing comma, prose, outer fence,
+  comment; 2 000+ cases, fixed seed) ships with it. 122 tests.
+
 - **`NaN`, `Infinity` and `-Infinity` no longer survive into the output.**
   `json.loads` accepts all three; RFC 8259 has no syntax for any of them, so
   returning them unchanged broke the documented promise of "a strictly valid
