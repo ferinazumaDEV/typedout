@@ -1,4 +1,4 @@
-<!-- synced-from: 1c35fbfed4fcc223729fb72b0f11315c60a69367 -->
+<!-- synced-from: 8f001757681c1fe101f699f37ba3ee476c50d022 -->
 # typedout
 
 **Español** · [English](README.md)
@@ -166,7 +166,7 @@ prompt ─▶ Provider.complete ─▶ repair(texto) ─▶ validate(esquema) �
 ```
 
 1. **Prompt** — el JSON Schema se incrusta en un prompt de sistema que pide un único objeto JSON.
-2. **Reparación** — `repair.py` recorre la respuesta carácter a carácter. Las cadenas se recodifican con `json.dumps` (así su contenido nunca se corrompe); las llaves sin cerrar se cierran; se para en el primer valor completo de nivel superior e ignora la prosa que venga detrás.
+2. **Reparación** — `repair.py` recorre la respuesta carácter a carácter. Las cadenas se recodifican con `json.dumps` (así su contenido nunca se corrompe); las llaves sin cerrar se cierran; se para en el primer valor completo de nivel superior e ignora la prosa que venga detrás. **El contrato:** una entrada que ya es JSON válido vuelve con el mismo valor, y el contenido de las cadenas nunca se reinterpreta — una valla de código *dentro* de una cadena se queda dentro de la cadena. Solo se retira una envoltura exterior.
 3. **Validación** — pydantic (instancia tipada) o `jsonschema_lite` (diccionario).
 4. **Reintento** — si falla, se añaden la respuesta mala del asistente y una corrección precisa («campo `edad`: debería ser un entero válido»), y el modelo lo intenta otra vez.
 

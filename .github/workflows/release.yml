@@ -26,6 +26,13 @@ on:
         type: boolean
         default: true
 
+# One release per ref at a time, and never cancel one that is running: a
+# publish that is cancelled halfway is the recovery case RELEASING.md
+# describes, and this stops it from being self-inflicted.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -62,7 +69,14 @@ jobs:
           fi
 
           # A release with no changelog entry is a release nobody can read.
-          if [ -f CHANGELOG.md ] && ! grep -q "\[$PYPROJECT\]" CHANGELOG.md; then
+          # And a release with no changelog at all is worse, not exempt: the
+          # old guard only ran when the file existed, so deleting CHANGELOG.md
+          # was a way to pass it. Both cases fail now.
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md is missing"
+            exit 1
+          fi
+          if ! grep -q "\[$PYPROJECT\]" CHANGELOG.md; then
             echo "::error::CHANGELOG.md has no entry for [$PYPROJECT]"
             exit 1
           fi

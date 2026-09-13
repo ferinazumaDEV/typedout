@@ -207,7 +207,7 @@ prompt ─▶ Provider.complete ─▶ repair(text) ─▶ validate(schema) ─�
 ```
 
 1. **Prompt** — the JSON Schema is embedded in a system prompt asking for a single JSON object.
-2. **Repair** — `repair.py` scans the reply character by character. Strings are re-encoded through `json.dumps` (so their contents are never corrupted); unbalanced braces are closed; it stops at the first complete top-level value, ignoring trailing prose.
+2. **Repair** — `repair.py` scans the reply character by character. Strings are re-encoded through `json.dumps` (so their contents are never corrupted); unbalanced braces are closed; it stops at the first complete top-level value, ignoring trailing prose. **The contract:** input that is already valid JSON comes back with the same value, and string contents are never reinterpreted — a code fence *inside* a string stays inside the string. Only an outer wrapper is ever removed.
 3. **Validate** — pydantic (typed instance) or `jsonschema_lite` (dict).
 4. **Retry** — on failure the assistant's bad answer plus a precise correction ("field `age`: input should be a valid integer") are appended, and the model tries again.
 

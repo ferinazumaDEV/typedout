@@ -9,6 +9,8 @@ README for why they differ.
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-09-13
+
 ### Fixed
 
 - **`repair_json` no longer damages JSON that was already valid.** It stripped
