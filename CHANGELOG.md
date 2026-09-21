@@ -9,6 +9,16 @@ README for why they differ.
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-09-21
+
+### Changed
+
+- **The `openai` extra now accepts the 2.x and 3.x majors** (`openai>=1.30,<4`, was `<2`). Installing
+  `typedout-py[openai]` no longer pins you below a major that has been current for months. The widening is
+  backed by a run, not by optimism: a clean virtualenv with `openai==3.16.2` installed over the package runs
+  the full suite green (122 of 122, 2026-09-21). The cap stays at the next unreleased major, for the reason
+  the file already gives for `anthropic`: an uncapped range lets a future major break the package silently.
+
 ### Deprecated
 
 - **Python below 3.11 is compatibility, not support.** The floor becomes **3.11 in 0.2.0** (3.10 reaches
