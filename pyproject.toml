@@ -45,7 +45,7 @@ dependencies = [
 [project.optional-dependencies]
 # Capped at the major: anthropic 1.x removed `temperature` from messages.create,
 # and an uncapped range would let a future 2.x break this package silently.
-anthropic = ["anthropic>=1,<2"]
+anthropic = ["anthropic>=1,<3"]
 openai = ["openai>=1.30,<4"]
 dev = ["pytest>=7,<10"]
 
